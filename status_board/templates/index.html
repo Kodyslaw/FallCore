@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="pl" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stacja Monitorująca</title>
+    <!-- Tailwind CSS z CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        darkbg: '#0f172a',
+                        cardbg: '#1e293b',
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Auto-refresh strony co 30 sekund na potrzeby wyświetlacza -->
+    <meta http-equiv="refresh" content="30">
+</head>
+<body class="bg-darkbg text-slate-100 min-h-screen font-sans p-4">
+
+    <!-- Nagłówek -->
+    <header class="flex justify-between items-center mb-6 pb-3 border-b border-slate-700">
+        <div>
+            <h1 class="text-2xl font-bold tracking-wide text-emerald-400">STATUS MONITOR</h1>
+            <p class="text-xs text-slate-400">Stacja RasPi • Ostatnia zmiana: auto-refresh 30s</p>
+        </div>
+        
+        <!-- Przycisk do pokazywania/ukrywania formularza (przydatne na telefonie) -->
+        <button onclick="document.getElementById('add-form').classList.toggle('hidden')" 
+                class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold px-3 py-2 rounded-lg transition shadow">
+            + Dodaj Serwis
+        </button>
+    </header>
+
+    <!-- Formularz dodawania nowej strony (domyślnie ukryty) -->
+    <section id="add-form" class="hidden mb-6 p-4 bg-cardbg rounded-xl border border-slate-700 shadow-lg">
+        <h2 class="text-sm font-semibold mb-3 text-slate-200">Dodaj nowy serwis do monitorowania</h2>
+        <form action="/add" method="POST" class="grid grid-cols-1 md:grid-cols-4 gap-3">
+            <input type="text" name="name" placeholder="Nazwa (np. Google)" required
+                   class="bg-slate-900 text-slate-100 text-sm rounded-lg border border-slate-700 p-2.5 focus:ring-emerald-500 focus:border-emerald-500">
+            
+            <input type="url" name="url" placeholder="URL (https://...)" required
+                   class="bg-slate-900 text-slate-100 text-sm rounded-lg border border-slate-700 p-2.5 focus:ring-emerald-500 focus:border-emerald-500">
+            
+            <select name="type" class="bg-slate-900 text-slate-100 text-sm rounded-lg border border-slate-700 p-2.5 focus:ring-emerald-500 focus:border-emerald-500">
+                <option value="http">Zapytanie HTTP (Kod statusu)</option>
+                <option value="statuspage">Statuspage API</option>
+            </select>
+            
+            <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white font-medium rounded-lg text-sm px-4 py-2.5 transition">
+                Zapisz w bazie
+            </button>
+        </form>
+    </section>
+
+    <!-- Siatka kafelków ze statusami serwisów -->
+    <main class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {% if services %}
+            {% for service in services %}
+                <div class="bg-cardbg rounded-xl p-4 border border-slate-800 shadow-md flex flex-col justify-between">
+                    <div>
+                        <!-- Nagłówek kafelka: Nazwa i Wskaźnik statusu -->
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="font-bold text-lg text-slate-100 truncate max-w-[180px]">{{ service['name'] }}</h3>
+                            
+                            <!-- Badges (znacznik statusu) -->
+                            {% if service['status'] == 'UP' or service['status'] == 'operational' %}
+                                <span class="flex items-center gap-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-semibold px-2.5 py-1 rounded-full">
+                                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                                    Działa
+                                </span>
+                            {% elif service['status'] == 'DOWN' %}
+                                <span class="flex items-center gap-1.5 bg-rose-500/10 text-rose-400 border border-rose-500/20 text-xs font-semibold px-2.5 py-1 rounded-full">
+                                    <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+                                    Awarja
+                                </span>
+                            {% else %}
+                                <span class="flex items-center gap-1.5 bg-amber-500/10 text-amber-400 border border-amber-500/20 text-xs font-semibold px-2.5 py-1 rounded-full">
+                                    <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                                    {{ service['status'] }}
+                                </span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Adres URL -->
+                        <p class="text-xs text-slate-400 truncate mb-4">{{ service['url'] }}</p>
+                    </div>
+
+                    <!-- Stopka kafelka: Czas reakcji i data sprawdzenia -->
+                    <div class="pt-3 border-t border-slate-700/50 flex justify-between items-center text-xs text-slate-400">
+                        <span>Ping: <strong class="text-slate-200">{{ service['response_time'] }} ms</strong></span>
+                        <span>Ostatni test: {{ service['last_checked'] }}</span>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <!-- Stan pusty (Brak serwisów) -->
+            <div class="col-span-full text-center py-12 bg-cardbg/50 rounded-xl border border-dashed border-slate-700">
+                <p class="text-slate-400 text-sm mb-2">Brak dodanych serwisów w bazie danych.</p>
+                <p class="text-xs text-slate-500">Kliknij przycisk wyżej, aby dodać pierwszą stronę do monitorowania!</p>
+            </div>
+        {% endif %}
+    </main>
+
+</body>
+</html>
