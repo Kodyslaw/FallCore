@@ -19,36 +19,73 @@
             }
         }
     </script>
-    <!-- Auto-refresh strony co 30 sekund na potrzeby wyświetlacza -->
+    <!-- Auto-refresh strony co 30 sekund -->
     <meta http-equiv="refresh" content="30">
+    
+    <style>
+        /* PROBLEM 3: Ukrywanie formularza w orientacji poziomej (landscape) dla stacji montietorującej */
+        @media (orientation: landscape) {
+            #add-form-container {
+                display: none !important;
+            }
+            #add_service_button {
+                display: none !important;
+            }
+            main {
+                order: 1;
+            }
+            header {
+                order: 2;
+            }
+        }
+    </style>
 </head>
-<body class="bg-darkbg text-slate-100 min-h-screen font-sans p-4">
+<body class="bg-darkbg text-slate-100 min-h-screen font-sans p-4 flex flex-col">
 
     <!-- Nagłówek -->
-    <header class="flex justify-between items-center mb-6 pb-3 border-b border-slate-700">
+    <header class="flex justify-between items-center mb-1 pb-3 ">
         <div>
             <h1 class="text-2xl font-bold tracking-wide text-emerald-400">STATUS MONITOR</h1>
-            <p class="text-xs text-slate-400">Stacja RasPi • Ostatnia zmiana: auto-refresh 30s</p>
+            <p class="text-xs text-slate-400">Stacja RasPi • Auto-refresh co 30s</p>
         </div>
         
-        <!-- Przycisk do pokazywania/ukrywania formularza (przydatne na telefonie) -->
-        <button onclick="document.getElementById('add-form').classList.toggle('hidden')" 
+        <!-- Przycisk widoczny głównie na telefonie (w pionie) -->
+        <button id="add_service_button" onclick="toggleForm()" 
                 class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold px-3 py-2 rounded-lg transition shadow">
             + Dodaj Serwis
         </button>
     </header>
 
-    <!-- Formularz dodawania nowej strony (domyślnie ukryty) -->
-    <section id="add-form" class="hidden mb-6 p-4 bg-cardbg rounded-xl border border-slate-700 shadow-lg">
-        <h2 class="text-sm font-semibold mb-3 text-slate-200">Dodaj nowy serwis do monitorowania</h2>
+    <!-- Formularz dodawania nowej strony -->
+    <section id="add-form-container" class="hidden mb-6 p-4 bg-cardbg rounded-xl border border-slate-700 shadow-lg">
+        <h2 class="text-sm font-semibold mb-3 text-slate-200 flex justify-between">
+            Dodaj nowy serwis do monitorowania 
+            <button type="button" onclick="toggleForm()" class="text-xs text-red-400 hover:text-red-300 transition ml-2 ">
+                X
+            </button>
+        </h2>
+
+        <!-- PROBLEM 1: Wybór gotowych szablonów Statuspage -->
+        <div class="mb-3">
+            <label class="block text-xs text-slate-400 mb-1">Wybierz gotowy serwis z listy lub wpisz własny:</label>
+            <select id="preset-selector" onchange="fillPreset(this)" class="w-full bg-slate-900 text-slate-100 text-sm rounded-lg border border-slate-700 p-2 focus:ring-emerald-500 focus:border-emerald-500">
+                <option value="">-- Wybierz z gotowych (Statuspage) --</option>
+                <option value='{"name": "GitHub", "url": "https://www.githubstatus.com/api/v2/summary.json", "type": "statuspage"}'>GitHub</option>
+                <option value='{"name": "Discord", "url": "https://discordstatus.com/api/v2/summary.json", "type": "statuspage"}'>Discord</option>
+                <option value='{"name": "Vercel", "url": "https://www.vercel-status.com/api/v2/summary.json", "type": "statuspage"}'>Vercel</option>
+                <option value='{"name": "Cloudflare", "url": "https://www.cloudflarestatus.com/api/v2/summary.json", "type": "statuspage"}'>Cloudflare</option>
+                <option value='{"name": "Atlassian", "url": "https://status.atlassian.com/api/v2/summary.json", "type": "statuspage"}'>Atlassian</option>
+            </select>
+        </div>
+
         <form action="/add" method="POST" class="grid grid-cols-1 md:grid-cols-4 gap-3">
-            <input type="text" name="name" placeholder="Nazwa (np. Google)" required
+            <input type="text" id="input-name" name="name" placeholder="Nazwa (np. Google)" required
                    class="bg-slate-900 text-slate-100 text-sm rounded-lg border border-slate-700 p-2.5 focus:ring-emerald-500 focus:border-emerald-500">
             
-            <input type="url" name="url" placeholder="URL (https://...)" required
+            <input type="url" id="input-url" name="url" placeholder="URL (https://...)" required
                    class="bg-slate-900 text-slate-100 text-sm rounded-lg border border-slate-700 p-2.5 focus:ring-emerald-500 focus:border-emerald-500">
             
-            <select name="type" class="bg-slate-900 text-slate-100 text-sm rounded-lg border border-slate-700 p-2.5 focus:ring-emerald-500 focus:border-emerald-500">
+            <select id="input-type" name="type" class="bg-slate-900 text-slate-100 text-sm rounded-lg border border-slate-700 p-2.5 focus:ring-emerald-500 focus:border-emerald-500">
                 <option value="http">Zapytanie HTTP (Kod statusu)</option>
                 <option value="statuspage">Statuspage API</option>
             </select>
@@ -59,17 +96,15 @@
         </form>
     </section>
 
-    <!-- Siatka kafelków ze statusami serwisów -->
-    <main class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <!-- Siatka kafelków -->
+    <main class="content-start items-start grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-2 gap-y-2 grow">
         {% if services %}
             {% for service in services %}
                 <div class="bg-cardbg rounded-xl p-4 border border-slate-800 shadow-md flex flex-col justify-between">
                     <div>
-                        <!-- Nagłówek kafelka: Nazwa i Wskaźnik statusu -->
                         <div class="flex justify-between items-start mb-2">
                             <h3 class="font-bold text-lg text-slate-100 truncate max-w-[180px]">{{ service['name'] }}</h3>
                             
-                            <!-- Badges (znacznik statusu) -->
                             {% if service['status'] == 'UP' or service['status'] == 'operational' %}
                                 <span class="flex items-center gap-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-semibold px-2.5 py-1 rounded-full">
                                     <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
@@ -78,7 +113,7 @@
                             {% elif service['status'] == 'DOWN' %}
                                 <span class="flex items-center gap-1.5 bg-rose-500/10 text-rose-400 border border-rose-500/20 text-xs font-semibold px-2.5 py-1 rounded-full">
                                     <span class="w-2 h-2 rounded-full bg-rose-500"></span>
-                                    Awarja
+                                    Awaria
                                 </span>
                             {% else %}
                                 <span class="flex items-center gap-1.5 bg-amber-500/10 text-amber-400 border border-amber-500/20 text-xs font-semibold px-2.5 py-1 rounded-full">
@@ -87,12 +122,9 @@
                                 </span>
                             {% endif %}
                         </div>
-
-                        <!-- Adres URL -->
                         <p class="text-xs text-slate-400 truncate mb-4">{{ service['url'] }}</p>
                     </div>
 
-                    <!-- Stopka kafelka: Czas reakcji i data sprawdzenia -->
                     <div class="pt-3 border-t border-slate-700/50 flex justify-between items-center text-xs text-slate-400">
                         <span>Ping: <strong class="text-slate-200">{{ service['response_time'] }} ms</strong></span>
                         <span>Ostatni test: {{ service['last_checked'] }}</span>
@@ -100,13 +132,37 @@
                 </div>
             {% endfor %}
         {% else %}
-            <!-- Stan pusty (Brak serwisów) -->
             <div class="col-span-full text-center py-12 bg-cardbg/50 rounded-xl border border-dashed border-slate-700">
                 <p class="text-slate-400 text-sm mb-2">Brak dodanych serwisów w bazie danych.</p>
-                <p class="text-xs text-slate-500">Kliknij przycisk wyżej, aby dodać pierwszą stronę do monitorowania!</p>
+                <p class="text-xs text-slate-500">Otwórz widok w pionie lub użyj telefonu, aby dodać pierwsze usługi!</p>
             </div>
         {% endif %}
     </main>
 
+    <!-- Skrypty do obsługi stanu formularza i presetów -->
+    <script>
+        function toggleForm() {
+            const form = document.getElementById('add-form-container');
+            form.classList.toggle('hidden');
+            // PROBLEM 2: Zapisujemy stan otwarcie w pamięci przeglądarki
+            const isOpen = !form.classList.contains('hidden');
+            localStorage.setItem('formOpen', isOpen);
+        }
+
+        function fillPreset(selectObj) {
+            if (!selectObj.value) return;
+            const data = JSON.parse(selectObj.value);
+            document.getElementById('input-name').value = data.name;
+            document.getElementById('input-url').value = data.url;
+            document.getElementById('input-type').value = data.type;
+        }
+
+        // PROBLEM 2: Przywracamy stan formularza po automatycznym odświeżeniu strony
+        window.addEventListener('DOMContentLoaded', () => {
+            if (localStorage.getItem('formOpen') === 'true') {
+                document.getElementById('add-form-container').classList.remove('hidden');
+            }
+        });
+    </script>
 </body>
 </html>
