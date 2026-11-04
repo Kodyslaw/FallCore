@@ -1,15 +1,19 @@
 import sqlite3
 import threading
 import time
+import os
+import socket
 from flask import Flask, redirect, render_template, request, url_for
 from monitor import run_checks
 
+basedir = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(basedir, "database.db")
 app = Flask(__name__)
-DB_NAME = "database.db"
+## DB_NAME = "database.db"
 
 def init_db():
     """Inicjalizacja bazy danych SQLite i utworzenie tabeli serwisów"""
-    conn = sqlite3.connect(DB_NAME)
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS services (
@@ -37,12 +41,16 @@ def background_monitor():
 @app.route("/")
 def index():
     """Główny pulpit - wyświetla monitory z bazy danych"""
-    conn = sqlite3.connect(DB_NAME)
+    conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
     services = cursor.execute("SELECT * FROM services").fetchall()
     conn.close()
-    return render_template("index.html", services=services)
+    local_ip = get_local_ip()
+
+    
+    return render_template("index.html", services=services, local_ip=local_ip)
+
 
 @app.route("/add", methods=["POST"])
 def add_service():
@@ -52,7 +60,7 @@ def add_service():
     service_type = request.form.get("type", "http")
 
     if name and url:
-        conn = sqlite3.connect(DB_NAME)
+        conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
         cursor.execute(
             "INSERT INTO services (name, url, type, last_checked) VALUES (?, ?, ?, ?)",
@@ -69,6 +77,20 @@ def add_service():
             pass
 
     return redirect(url_for("index"))
+
+def get_local_ip():
+    """Pobiera aktualny adres IP Raspberry Pi w sieci lokalnej"""
+    try:
+        # Tworzymy tymczasowe połączenie UDP, aby ustalić domyślny interfejs sieciowy
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+        s.close()
+        return ip
+    except Exception:
+        return "127.0.0.1"
+
+
 
 if __name__ == "__main__":
     init_db()

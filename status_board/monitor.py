@@ -2,7 +2,10 @@ from datetime import datetime
 import time
 import requests
 import sqlite3
+import os
 
+basedir = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(basedir, "database.db")
 DB_NAME = "database.db"
 
 def check_service(service_id, url, service_type):
@@ -42,7 +45,7 @@ def check_service(service_id, url, service_type):
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     
     # Aktualizacja rekordu w bazie danych
-    conn = sqlite3.connect(DB_NAME)
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("""
         UPDATE services 
@@ -54,7 +57,7 @@ def check_service(service_id, url, service_type):
 
 def run_checks():
     """Pobiera wszystkie serwisy z bazy i uruchamia dla nich testy"""
-    conn = sqlite3.connect(DB_NAME)
+    conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
     services = cursor.execute("SELECT id, url, type FROM services").fetchall()
