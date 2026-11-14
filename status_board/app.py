@@ -69,8 +69,6 @@ def add_service():
         conn.commit()
         conn.close()
         
-        # Opcjonalnie: możemy od razu wykonać test dla nowo dodanego serwisu, 
-        # żeby użytkownik od razu widział status bez czekania na pętlę w tle.
         try:
             run_checks()
         except Exception:
@@ -102,9 +100,3 @@ if __name__ == "__main__":
     # Uruchomienie serwera Flask w sieci lokalnej
     app.run(host="0.0.0.0", port=5000, debug=True)
 
-# to do: 
-# 1.inicjalizacja bazy danych sqlite i dodanie kilku serwisów dla testu, aby później podmienić to pod jakąś dynamiczną bazę
-# 2. funkcja sprawdzająca statusy serwisów w tle
-# 3. funkcja przekazująca dane statusu do index.html
-# 4. funkcja aktualizująca 'ulubione' serwisy
-# 5. dodanie formularza konfiguracyjnego w widoku wertykalnym (smartfon) 

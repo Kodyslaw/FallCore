@@ -15,13 +15,13 @@ Lekki, samodzielnie hostowany pulpit monitorujący zbudowany w języku Python i 
 ## Stos technologiczny (Tech Stack)
 
 ### **Backend i rdzeń**
-- **Python 3:** Główny język programowania[cite: 3].
-- **Flask:** Lekki framework internetowy WSGI obsługujący routing i renderowanie pulpitu[cite: 3].
-- **SQLite:** Wbudowana, plikowa baza danych SQL (`database.db`) służąca do przechowywania serwisów i historii sprawdzeń[cite: 3].
-- **Threading:** Wbudowany w Pythona moduł `threading` do asynchronicznego sprawdzania statusów w tle[cite: 3].
+- **Python 3:** Główny język programowania .
+- **Flask:** Lekki framework internetowy WSGI obsługujący routing i renderowanie pulpitu .
+- **SQLite:** Wbudowana, plikowa baza danych SQL (`database.db`) służąca do przechowywania serwisów i historii sprawdzeń .
+- **Threading:** Wbudowany w Pythona moduł `threading` do asynchronicznego sprawdzania statusów w tle .
 
 ### **Frontend i interfejs**
-- **HTML5 i CSS3:** Czysty, responsywny interfejs budowany za pomocą szablonów Flask/Jinja2[cite: 3].
+- **HTML5 i CSS3:** Czysty, responsywny interfejs budowany za pomocą szablonów Flask/Jinja2 .
 - **Responsywny układ:** Dostosowany zarówno do dużych ekranów pulpitowych/kioskowych, jak i ekranów urządzeń mobilnych.
 
 ### **Sprzęt i środowisko**
@@ -40,9 +40,9 @@ FallCore/
 ├── status_board/
 │   ├── templates/
 │   │   └── index.html      # Widok pulpitu frontendowego
-│   ├── app.py              # Główna aplikacja Flask i trasy[cite: 3]
-│   ├── monitor.py          # Logika sprawdzania statusu w tle[cite: 3]
-│   └── database.db         # Baza danych SQLite przechowująca serwisy[cite: 3]
+│   ├── app.py              # Główna aplikacja Flask i trasy 
+│   ├── monitor.py          # Logika sprawdzania statusu w tle 
+│   └── database.db         # Baza danych SQLite przechowująca serwisy 
 │
 ├── venv/                   # Wirtualne środowisko Pythona
 └── README.md
