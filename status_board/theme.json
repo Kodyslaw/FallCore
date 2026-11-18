@@ -1,0 +1,14 @@
+{
+  "mode": "dark",
+  "base": "dark",
+  "custom": {
+    "--bg": "#090e18",
+    "--panel": "#111a29",
+    "--green": "#ac36e2",
+    "--text": "#f0f5fc",
+    "--border": "#273347",
+    "--amber": "#ffc36b",
+    "--red": "#ff7188",
+    "--blue": "#7daeff"
+  }
+}
