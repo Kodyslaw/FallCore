@@ -1,1 +1,4 @@
 *.db
+FallCore/status_board/database.db
+database.db
+theme.json
